@@ -1,6 +1,7 @@
 #
 # 回调基础类
 #
+from .wxpay_api import WxPayApi
 from .wxpay_data import WxPayNotifyReply
 
 
