@@ -5,7 +5,7 @@
 from .wxpay_config import WxPayConfig
 from .wxpay_exception import WxPayException
 
-import hashlib
+import hashlib, json
 
 
 # 数据对象基础类，该类中定义数据类最基本的行为，包括：
@@ -47,7 +47,7 @@ class WxPayDataBase:
         if not xml:
             raise WxPayException("xml数据异常！")
         # libxml_disable_entity_loader(true)
-        self.values = json_decode(json_encode(simplexml_load_string(xml, 'SimpleXMLElement', LIBXML_NOCDATA)), True)
+        self.values = json.dumps(json.loads(simplexml_load_string(xml, 'SimpleXMLElement', LIBXML_NOCDATA)), True)
         return self.values
 
     # 格式化参数格式化成url参数
@@ -72,7 +72,7 @@ class WxPayDataBase:
 
     # 获取设置的值
     def GetValues(self):
-        return self.values;
+        return self.values
 
 
 # 接口调用结果类
@@ -92,11 +92,10 @@ class WxPayResults(WxPayDataBase):
 
     # 使用数组初始化对象
     def InitFromArray(self, noCheckSign=False, **array):
-        obj = super()
-        obj.FromArray(**array)
+        self.FromArray(**array)
         if noCheckSign == False:
-            obj.CheckSign()
-        return obj
+            self.CheckSign()
+        return self
 
     # 设置参数
     def SetData(self, key, value):
@@ -104,13 +103,12 @@ class WxPayResults(WxPayDataBase):
 
     # 将xml转成array
     def Init(self, xml):
-        obj = super()
-        obj.FromXml(xml)
+        self.FromXml(xml)
         # fix bug 2015-06-29
-        if obj.values['return_code'] != 'SUCCESS':
-            return obj.GetValues()
-        obj.CheckSign()
-        return obj.GetValues()
+        if self.values['return_code'] != 'SUCCESS':
+            return self.GetValues()
+        self.CheckSign()
+        return self.GetValues()
 
 
 # 回调基础类
@@ -1092,7 +1090,7 @@ class WxPayMicroPay(WxPayDataBase):
 
     # 设置附加数据，在查询API和支付通知中原样返回，该字段主要用于商户携带订单的自定义数据
     def SetAttach(self, value):
-        self.value['attach'] = value
+        self.values['attach'] = value
 
     # 获取附加数据，在查询API和支付通知中原样返回，该字段主要用于商户携带订单的自定义数据的值
     def GetAttach(self):
@@ -1137,3 +1135,271 @@ class WxPayMicroPay(WxPayDataBase):
     # 判断符合ISO 4217标准的三位字母代码，默认人民币：CNY，其他值列表详见货币类型是否存在
     def IsFee_typeSet(self):
         return 'fee_type' in self.values.keys()
+
+    # 设置调用微信支付API的机器IP
+    def SetSpbill_create_ip(self, value):
+        self.values['spbill_create_ip'] = value
+
+    # 获取调用微信支付API的机器IP 的值
+    def GetSpbill_create_ip(self):
+        return self.values['spbill_create_ip']
+
+    # 判断调用微信支付API的机器IP 是否存在
+    def IsSpbill_create_ipSet(self):
+        return 'spbill_create_ip' in self.values.keys()
+
+    # 设置订单生成时间，格式为yyyyMMddHHmmss，如2009年12月25日9点10分10秒表示为20091225091010。详见时间规则
+    def SetTime_start(self, value):
+        self.values['time_start'] = value
+
+    # 获取订单生成时间，格式为yyyyMMddHHmmss，如2009年12月25日9点10分10秒表示为20091225091010。详见时间规则的值
+    def GetTime_start(self):
+        return self.values['time_start']
+
+    # 判断订单生成时间，格式为yyyyMMddHHmmss，如2009年12月25日9点10分10秒表示为20091225091010。详见时间规则是否存在
+    def IsTime_startSet(self):
+        return 'time_start' in self.values.keys()
+
+    # 设置订单失效时间，格式为yyyyMMddHHmmss，如2009年12月27日9点10分10秒表示为20091227091010。详见时间规则
+    def SetTime_expire(self, value):
+        self.values['time_expire'] = value
+
+    # 获取订单失效时间，格式为yyyyMMddHHmmss，如2009年12月27日9点10分10秒表示为20091227091010。详见时间规则的值
+    def GetTime_expire(self):
+        return self.values['time_expire']
+
+    # 判断订单失效时间，格式为yyyyMMddHHmmss，如2009年12月27日9点10分10秒表示为20091227091010。详见时间规则是否存在
+    def IsTime_expireSet(self):
+        return 'time_expire' in self.values.keys()
+
+    # 设置商品标记，代金券或立减优惠功能的参数，说明详见代金券或立减优惠
+    def SetGoods_tag(self, value):
+        self.values['goods_tag'] = value
+
+    # 获取商品标记，代金券或立减优惠功能的参数，说明详见代金券或立减优惠的值
+    def GetGoods_tag(self):
+        return self.values['goods_tag']
+
+    # 判断商品标记，代金券或立减优惠功能的参数，说明详见代金券或立减优惠是否存在
+    def IsGoods_tagSet(self):
+        return 'goods_tag' in self.values.keys()
+
+    # 设置扫码支付授权码，设备读取用户微信中的条码或者二维码信息
+    def SetAuth_code(self, value):
+        self.values['auth_code'] = value
+
+    # 获取扫码支付授权码，设备读取用户微信中的条码或者二维码信息的值
+    def GetAuth_code(self):
+        return self.values['auth_code']
+
+    # 判断扫码支付授权码，设备读取用户微信中的条码或者二维码信息是否存在
+    def IsAuth_codeSet(self):
+        return 'auth_code' in self.values.keys()
+
+
+#
+# 撤销输入对象
+#
+class WxPayReverse(WxPayDataBase):
+    # 设置微信分配的公众账号ID
+    def SetAppid(self, value):
+        self.values['appid'] = value
+
+    # 获取微信分配的公众账号ID的值
+    def GetAppid(self):
+        return self.values['appid']
+
+    # 判断微信分配的公众账号ID是否存在
+    def IsAppidSet(self):
+        return 'appid' in self.values.keys()
+
+    # 设置微信支付分配的商户号
+    def SetMch_id(self, value):
+        self.values['mch_id'] = value
+
+    # 获取微信支付分配的商户号的值
+    def GetMch_id(self):
+        return self.values['mch_id']
+
+    # 判断微信支付分配的商户号是否存在
+    def IsMch_idSet(self):
+        return 'mch_id' in self.values.keys()
+
+    # 设置微信的订单号，优先使用
+    def SetTransaction_id(self, value):
+        self.values['transaction_id'] = value
+
+    # 获取微信的订单号，优先使用的值
+    def GetTransaction_id(self):
+        return self.values['transaction_id']
+
+    # 判断微信的订单号，优先使用是否存在
+    def IsTransaction_idSet(self):
+        return 'transaction_id' in self.values.keys()
+
+    # 设置商户系统内部的订单号,transaction_id、out_trade_no二选一，如果同时存在优先级：transaction_id> out_trade_no
+    def SetOut_trade_no(self, value):
+        self.values['out_trade_no'] = value
+
+    # 获取商户系统内部的订单号,transaction_id、out_trade_no二选一，如果同时存在优先级：transaction_id> out_trade_no的值
+    def GetOut_trade_no(self):
+        return self.values['out_trade_no']
+
+    # 判断商户系统内部的订单号,transaction_id、out_trade_no二选一，如果同时存在优先级：transaction_id> out_trade_no是否存在
+    def IsOut_trade_noSet(self):
+        return 'out_trade_no' in self.values.keys()
+
+    # 设置随机字符串，不长于32位。推荐随机数生成算法
+    def SetNonce_str(self, value):
+        self.values['nonce_str'] = value
+
+    # 获取随机字符串，不长于32位。推荐随机数生成算法的值
+    def GetNonce_str(self):
+        return self.values['nonce_str']
+
+    # 判断随机字符串，不长于32位。推荐随机数生成算法是否存在
+    def IsNonce_strSet(self):
+        return 'nonce_str' in self.values.keys()
+
+
+#
+# 提交JSAPI输入对象
+#
+class WxPayJsApiPay(WxPayDataBase):
+    # 设置微信分配的公众账号ID
+    def SetAppid(self, value):
+        self.values['appid'] = value
+
+    # 获取微信分配的公众账号ID的值
+    def GetAppid(self):
+        return self.values['appid']
+
+    # 判断微信分配的公众账号ID是否存在
+    def IsAppidSet(self):
+        return 'appid' in self.values.keys()
+
+    # 设置支付时间戳
+    def SetTimeStamp(self, value):
+        self.values['timestamp'] = value
+
+    # 获取支付时间戳的值
+    def GetTimeStamp(self):
+        return self.values['timestamp']
+
+    # 判断支付时间戳是否存在
+    def IsTimeStampSet(self):
+        return 'timestamp' in self.values.keys()
+
+    # 随机字符串
+    def SetNonceStr(self, value):
+        self.values['nonceStr'] = value
+
+    # 获取notify随机字符串值
+    def GetReturn_code(self):
+        return self.values['nonceStr']
+
+    # 判断随机字符串是否存在
+    def IsReturn_codeSet(self):
+        return 'nonceStr' in self.values.keys()
+
+    # 设置订单详情扩展字符串
+    def SetPackage(self, value):
+        self.values['package'] = value
+
+    # 获取订单详情扩展字符串的值
+    def GetPackage(self):
+        return self.values['package']
+
+    # 判断订单详情扩展字符串是否存在
+    def IsPackageSet(self):
+        return 'package' in self.values.keys()
+
+    # 设置签名方式
+    def SetSignType(self, value):
+        self.values['signType'] = value
+
+    # 获取签名方式
+    def GetSignType(self):
+        return self.values['signType']
+
+    # 判断签名方式是否存在
+    def IsSignTypeSet(self):
+        return 'signType' in self.values.keys()
+
+    # 设置签名方式
+    def SetPaySign(self, value):
+        self.values['paySign'] = value
+
+    # 获取签名方式
+    def GetPaySign(self):
+        return self.values['paySign']
+
+    # 判断签名方式是否存在
+    def IsPaySignSet(self):
+        return 'paySign' in self.values.keys()
+
+
+#
+# 扫码支付模式一生成二维码参数
+#
+
+class WxPayBizPayUrl(WxPayDataBase):
+    # 设置微信分配的公众账号ID
+    def SetAppid(self, value):
+        self.values['appid'] = value
+
+    # 获取微信分配的公众账号ID的值
+    def GetAppid(self):
+        return self.values['appid']
+
+    # 判断微信分配的公众账号ID是否存在
+    def IsAppidSet(self):
+        return 'appid' in self.values.keys()
+
+    # 设置微信支付分配的商户号
+    def SetMch_id(self, value):
+        self.values['mch_id'] = value
+
+    # 获取微信支付分配的商户号的值
+    def GetMch_id(self):
+        return self.values['mch_id']
+
+    # 判断微信支付分配的商户号是否存在
+    def IsMch_idSet(self):
+        return 'mch_id' in self.values.keys()
+
+    # 设置支付时间戳
+    def SetTime_stamp(self, value):
+        self.values['time_stamp'] = value
+
+    # 获取支付时间戳的值
+    def GetTime_stamp(self):
+        return self.values['time_stamp']
+
+    # 判断支付时间戳是否存在
+    def IsTime_stampSet(self):
+        return 'time_stamp' in self.values.keys()
+
+    # 设置随机字符串
+    def SetNonce_str(self, value):
+        self.values['nonce_str'] = value
+
+    # 获取随机字符串的值
+    def GetNonce_str(self):
+        return self.values['nonce_str']
+
+    # 判断随机字符串是否存在
+    def IsNonce_strSet(self):
+        return 'nonce_str' in self.values.keys()
+
+    # 设置商品ID
+    def SetProduct_id(self, value):
+        self.values['product_id'] = value
+
+    # 获取商品ID的值
+    def GetProduct_id(self):
+        return self.values['product_id']
+
+    # 判断商品ID是否存在
+    def IsProduct_idSet(self):
+        return 'product_id' in self.values.keys()

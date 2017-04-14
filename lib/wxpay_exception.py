@@ -4,9 +4,10 @@
 # @author widyhu
 #
 #
-import traceback
-
 
 class WxPayException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
     def errorMessage(self):
-        return traceback.print_last()
+        raise self.msg
