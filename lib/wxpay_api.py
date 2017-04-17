@@ -1,8 +1,8 @@
 from .wxpay_config import WxPayConfig
 from .wxpay_exception import WxPayException
-from .wxpay_data import WxPayResults
+from .wxpay_data import WxPayResults, WxPayReport
 
-import requests, time, datetime
+import requests, datetime
 
 
 # 接口访问类，包含所有微信支付API列表的封装，类中方法为static方法，
@@ -424,6 +424,7 @@ class WxPayApi:
         try:
             WxPayApi.report(objInput)
         except WxPayException as e:
+            # 不做任何处理
             pass
 
     # 以post方式提交xml到对应的接口url
@@ -435,9 +436,39 @@ class WxPayApi:
     # @ throws WxPayException
     @staticmethod
     def postXmlCurl(xml, url, useCert=False, second=30):
-        return xml
+        url = url
+        # 是否严格校验
+        verify = True
+        # 设置超时
+        timeout = second
+        # 如果有配置代理这里就设置代理
+        proxies = {}
+        if WxPayConfig.CURL_PROXY_HOST != "0.0.0.0" and \
+                        WxPayConfig.CURL_PROXY_PORT != 0:
+            proxies = {
+                "http": "http://" + WxPayConfig.CURL_PROXY_HOST + ":" + WxPayConfig.CURL_PROXY_PORT,
+                "https": "https://" + WxPayConfig.CURL_PROXY_HOST + ":" + WxPayConfig.CURL_PROXY_PORT
+            }
+        if useCert:
+            # 设置证书
+            # 使用证书：cert与key分别属于两个.pem文件
+            pass
+        # post提交方式
+        response = requests.post(url, data=xml)
+
+        # 返回结果
+        if response.status_code == "200":
+            return response.text
+        else:
+            error = response.status_code
+            WxPayException("curl出错，错误码:" + error)
 
     # 获取毫秒级别的时间戳
     @staticmethod
     def getMillisecond():
-        pass
+        # 获取毫秒的时间戳
+        import time
+        now_timestmap = time.time()
+        time_tuple = str(now_timestmap).split('.')
+        new_time = time_tuple[0] + time_tuple[1][0:3]
+        return new_time
