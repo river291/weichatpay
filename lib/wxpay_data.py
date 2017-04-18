@@ -5,12 +5,13 @@
 from .wxpay_config import WxPayConfig
 from .wxpay_exception import WxPayException
 
-import hashlib, json
+import hashlib
 
 
 # 数据对象基础类，该类中定义数据类最基本的行为，包括：
 # 计算/设置/获取签名、输出xml格式的参数、从xml读取数据对象等
 # @author widyhu
+# edit by River
 
 class WxPayDataBase:
     values = dict()
@@ -77,8 +78,11 @@ class WxPayDataBase:
         # 签名步骤一： 按字典序排序参数
         self.values = sorted(self.values.items, key=lambda self: self.values[0])
         wx_string = self.ToUrlParams()
+        # 签名步骤二：在string后加入KEY
         wx_string = wx_string + "&key=" + WxPayConfig.__KEY__
+        # 签名步骤三：MD5加密
         wx_string = hashlib.md5(wx_string.encode('utf-8')).hexdigest()
+        # 签名步骤四：所有字符转为大写
         result = wx_string.upper()
         return result
 
