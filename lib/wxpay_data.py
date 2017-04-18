@@ -31,7 +31,7 @@ class WxPayDataBase:
 
     # 输出xml字符
     def ToXml(self):
-        if type(self.values) is not dict or len(self.values) <= 0:
+        if not isinstance(self.values, dict) or len(self.values) <= 0:
             raise WxPayException("数组数据异常！")
         xml = "<xml>"
         for key, value in self.values.items():
@@ -46,8 +46,20 @@ class WxPayDataBase:
     def FromXml(self, xml):
         if not xml:
             raise WxPayException("xml数据异常！")
-        # libxml_disable_entity_loader(true)
-        self.values = json.dumps(json.loads(simplexml_load_string(xml, 'SimpleXMLElement', LIBXML_NOCDATA)), True)
+
+        # 引入ElementTree
+        try:
+            import xml.etree.cElementTree as ET
+        except ImportError:
+            import xml.etree.ElementTree as ET
+        # 处理xml
+        xml2dict = {}
+
+        xml_tree = ET.fromstring(xml)
+        for child_node in xml_tree:
+            xml2dict[child_node.tag] = child_node.text
+
+        self.values = xml2dict
         return self.values
 
     # 格式化参数格式化成url参数
@@ -55,7 +67,7 @@ class WxPayDataBase:
         buff = ""
         tmp = []
         for key, value in self.values.items():
-            if key != "sign" and value != "" and type(value) is not dict:
+            if key != "sign" and value != "" and not isinstance(value, dict):
                 tmp.append(key + "=" + str(value))
         buff = "&".join(tmp)
         return buff

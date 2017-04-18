@@ -368,8 +368,11 @@ class WxPayApi:
     def getNonceStr(length=32):
         chars = "abcdefghijklmnopqrstuvwxyz0123456789"
         wx_str = ""
+
+        import random
         for i in range(length):
-            wx_str += ''
+            rand_num = random.randint(0, len(chars) - 1)
+            wx_str += chars[rand_num]
         return wx_str
 
     # 直接输出xml
